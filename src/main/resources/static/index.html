@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Skill 管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 28px 0;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+        .header h1 { font-size: 28px; font-weight: 600; letter-spacing: 1px; }
+        .header p  { margin-top: 6px; font-size: 14px; opacity: .85; }
+
+        .container { max-width: 1080px; margin: 28px auto; padding: 0 16px; }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.08);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .form-grid .full { grid-column: 1 / -1; }
+
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 13px; color: #666; margin-bottom: 4px; font-weight: 500; }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color .2s;
+            outline: none;
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102,126,234,.15);
+        }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .form-group textarea.content-area { min-height: 140px; font-family: "Cascadia Code", "Fira Code", Consolas, monospace; font-size: 13px; }
+
+        .btn-bar { display: flex; gap: 10px; margin-top: 6px; }
+
+        .btn {
+            padding: 8px 22px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .2s;
+            white-space: nowrap;
+        }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+        .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+        .btn-cancel { background: #f5f5f5; color: #666; border: 1px solid #d9d9d9; }
+        .btn-cancel:hover { background: #e8e8e8; }
+        .btn-sm { padding: 4px 14px; font-size: 13px; }
+        .btn-edit   { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+        .btn-edit:hover { background: #bae7ff; }
+        .btn-delete { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
+        .btn-delete:hover { background: #ffccc7; }
+        .btn-view   { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        .btn-view:hover { background: #d9f7be; }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            background: #fafafa;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        tbody td {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+        tbody tr:hover { background: #fafafa; }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .tag-code-review       { background: #e6f7ff; color: #1890ff; }
+        .tag-document           { background: #fff7e6; color: #fa8c16; }
+        .tag-deployment         { background: #f6ffed; color: #52c41a; }
+        .tag-code-generation    { background: #f9f0ff; color: #722ed1; }
+        .tag-data-analysis      { background: #fff0f6; color: #eb2f96; }
+        .tag-other              { background: #f5f5f5; color: #999; }
+
+        .actions { display: flex; gap: 6px; }
+        .empty-state { text-align: center; padding: 40px 0; color: #bbb; font-size: 15px; }
+        .desc-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .time-cell { font-size: 12px; color: #999; white-space: nowrap; }
+        .name-cell { font-family: "Cascadia Code", "Fira Code", Consolas, monospace; font-size: 13px; color: #667eea; }
+
+        /* Modal */
+        .modal-mask {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.45);
+            z-index: 900;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-mask.show { display: flex; }
+        .modal {
+            background: #fff;
+            border-radius: 10px;
+            width: 680px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 28px;
+            box-shadow: 0 8px 30px rgba(0,0,0,.18);
+        }
+        .modal h3 { font-size: 18px; margin-bottom: 12px; }
+        .modal pre {
+            background: #f6f8fa;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            padding: 16px;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+            max-height: 360px;
+            overflow-y: auto;
+        }
+        .modal .meta { font-size: 13px; color: #666; margin-bottom: 8px; }
+        .modal .meta span { margin-right: 18px; }
+        .modal .close-btn {
+            margin-top: 16px;
+            float: right;
+        }
+
+        .toast {
+            position: fixed; top: 20px; right: 20px;
+            padding: 12px 24px;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all .3s;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast-success { background: #52c41a; }
+        .toast-error   { background: #ff4d4f; }
+
+        /* Preset dropdown */
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
+        .card-header h2 { margin: 0; padding: 0; border: none; }
+        .preset-wrap { position: relative; }
+        .btn-preset {
+            background: linear-gradient(135deg, #f5af19, #f12711);
+            color: #fff;
+            padding: 6px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .btn-preset:hover { opacity: .9; transform: translateY(-1px); }
+        .preset-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 6px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 6px 24px rgba(0,0,0,.15);
+            min-width: 280px;
+            z-index: 100;
+            padding: 6px 0;
+            max-height: 420px;
+            overflow-y: auto;
+        }
+        .preset-menu.show { display: block; }
+        .preset-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background .15s;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .preset-item:last-child { border-bottom: none; }
+        .preset-item:hover { background: #f0f5ff; }
+        .preset-item .pi-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        .preset-item .pi-desc {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>AI Skill 管理系统</h1>
+    <p>创建、管理和维护你的 AI Agent Skills</p>
+</div>
+
+<div class="container">
+    <!-- Form Card -->
+    <div class="card">
+        <div class="card-header">
+            <h2 id="formTitle">新增 Skill</h2>
+            <div class="preset-wrap">
+                <button class="btn-preset" onclick="togglePresetMenu(event)">快速填充常用 Skill</button>
+                <div class="preset-menu" id="presetMenu"></div>
+            </div>
+        </div>
+        <input type="hidden" id="editId">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="name">Skill 标识名 *</label>
+                <input type="text" id="name" placeholder="如：code-review（小写+连字符）">
+            </div>
+            <div class="form-group">
+                <label for="displayName">显示名称</label>
+                <input type="text" id="displayName" placeholder="如：代码审查助手">
+            </div>
+            <div class="form-group">
+                <label for="author">作者</label>
+                <input type="text" id="author" placeholder="如：Seekseek">
+            </div>
+            <div class="form-group">
+                <label for="category">分类</label>
+                <select id="category">
+                    <option value="code-review">代码审查</option>
+                    <option value="code-generation">代码生成</option>
+                    <option value="document">文档处理</option>
+                    <option value="deployment">部署运维</option>
+                    <option value="data-analysis">数据分析</option>
+                    <option value="other">其他</option>
+                </select>
+            </div>
+            <div class="form-group full">
+                <label for="description">描述（做什么 + 什么时候触发）*</label>
+                <textarea id="description" rows="2" placeholder="如：Review code for quality, security, and best practices. Use when reviewing pull requests or code changes."></textarea>
+            </div>
+            <div class="form-group full">
+                <label for="content">Skill 指令内容（Markdown）</label>
+                <textarea id="content" class="content-area" placeholder="# Code Review&#10;&#10;## Instructions&#10;&#10;1. Check for correctness and potential bugs&#10;2. Verify security best practices&#10;3. Assess readability and maintainability"></textarea>
+            </div>
+            <div class="full btn-bar">
+                <button class="btn btn-primary" onclick="handleSubmit()">保存</button>
+                <button class="btn btn-cancel" id="btnCancel" onclick="resetForm()" style="display:none">取消编辑</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- List Card -->
+    <div class="card">
+        <h2>Skill 列表</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:50px">ID</th>
+                    <th>标识名</th>
+                    <th>显示名称</th>
+                    <th>分类</th>
+                    <th>描述</th>
+                    <th>作者</th>
+                    <th>更新时间</th>
+                    <th style="width:160px">操作</th>
+                </tr>
+            </thead>
+            <tbody id="skillTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none">暂无 Skill，点击上方表单创建第一个</div>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-mask" id="detailModal">
+    <div class="modal">
+        <h3 id="modalTitle"></h3>
+        <div class="meta" id="modalMeta"></div>
+        <p style="font-size:13px;color:#666;margin-bottom:6px;" id="modalDesc"></p>
+        <pre id="modalContent"></pre>
+        <button class="btn btn-cancel close-btn" onclick="closeModal()">关闭</button>
+        <div style="clear:both"></div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = '/api/skills';
+
+const CATEGORY_MAP = {
+    'code-review':    '代码审查',
+    'code-generation':'代码生成',
+    'document':       '文档处理',
+    'deployment':     '部署运维',
+    'data-analysis':  '数据分析',
+    'other':          '其他'
+};
+
+async function loadSkills() {
+    try {
+        const res = await fetch(API_BASE);
+        const result = await res.json();
+        renderTable(result.data || []);
+    } catch (e) {
+        showToast('加载失败：' + e.message, 'error');
+    }
+}
+
+function categoryTag(cat) {
+    const label = CATEGORY_MAP[cat] || cat || '其他';
+    const cls = 'tag-' + (CATEGORY_MAP[cat] ? cat : 'other');
+    return `<span class="tag ${esc(cls)}">${esc(label)}</span>`;
+}
+
+function renderTable(skills) {
+    const tbody = document.getElementById('skillTableBody');
+    const emptyState = document.getElementById('emptyState');
+
+    if (skills.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+    emptyState.style.display = 'none';
+
+    tbody.innerHTML = skills.map(s => `
+        <tr>
+            <td>${s.id}</td>
+            <td class="name-cell">${esc(s.name)}</td>
+            <td>${esc(s.displayName || '')}</td>
+            <td>${categoryTag(s.category)}</td>
+            <td class="desc-cell" title="${esc(s.description || '')}">${esc(s.description || '')}</td>
+            <td>${esc(s.author || '')}</td>
+            <td class="time-cell">${esc(s.updatedAt || '')}</td>
+            <td class="actions">
+                <button class="btn btn-sm btn-view" onclick="viewSkill(${s.id})">查看</button>
+                <button class="btn btn-sm btn-edit" onclick='fillForm(${JSON.stringify(s).replace(/'/g,"&#39;")})'>编辑</button>
+                <button class="btn btn-sm btn-delete" onclick="deleteSkill(${s.id})">删除</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function esc(text) {
+    if (text == null) return '';
+    const d = document.createElement('div');
+    d.textContent = String(text);
+    return d.innerHTML;
+}
+
+/* ---- Form ---- */
+
+function fillForm(skill) {
+    document.getElementById('editId').value      = skill.id;
+    document.getElementById('name').value         = skill.name || '';
+    document.getElementById('displayName').value  = skill.displayName || '';
+    document.getElementById('author').value        = skill.author || '';
+    document.getElementById('category').value      = skill.category || 'other';
+    document.getElementById('description').value   = skill.description || '';
+    document.getElementById('content').value       = skill.content || '';
+    document.getElementById('formTitle').textContent = '编辑 Skill';
+    document.getElementById('btnCancel').style.display = 'inline-block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm() {
+    ['editId','name','displayName','author','description','content'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('category').value = 'code-review';
+    document.getElementById('formTitle').textContent = '新增 Skill';
+    document.getElementById('btnCancel').style.display = 'none';
+}
+
+async function handleSubmit() {
+    const name        = document.getElementById('name').value.trim();
+    const displayName = document.getElementById('displayName').value.trim();
+    const author      = document.getElementById('author').value.trim();
+    const category    = document.getElementById('category').value;
+    const description = document.getElementById('description').value.trim();
+    const content     = document.getElementById('content').value.trim();
+
+    if (!name) { showToast('请输入 Skill 标识名', 'error'); return; }
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(name)) {
+        showToast('标识名仅允许小写字母、数字和连字符', 'error'); return;
+    }
+    if (!description) { showToast('请输入描述', 'error'); return; }
+
+    const editId = document.getElementById('editId').value;
+    const body = JSON.stringify({ name, displayName, author, category, description, content });
+    const headers = { 'Content-Type': 'application/json' };
+
+    try {
+        let res;
+        if (editId) {
+            res = await fetch(`${API_BASE}/${editId}`, { method: 'PUT', headers, body });
+        } else {
+            res = await fetch(API_BASE, { method: 'POST', headers, body });
+        }
+        const result = await res.json();
+        if (result.code === 200) {
+            showToast(editId ? '更新成功' : '创建成功', 'success');
+            resetForm();
+            loadSkills();
+        } else {
+            showToast(result.message || '操作失败', 'error');
+        }
+    } catch (e) {
+        showToast('请求失败：' + e.message, 'error');
+    }
+}
+
+async function deleteSkill(id) {
+    if (!confirm('确定删除该 Skill 吗？')) return;
+    try {
+        const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+        const result = await res.json();
+        if (result.code === 200) {
+            showToast('删除成功', 'success');
+            loadSkills();
+        } else {
+            showToast(result.message || '删除失败', 'error');
+        }
+    } catch (e) {
+        showToast('请求失败：' + e.message, 'error');
+    }
+}
+
+/* ---- Detail Modal ---- */
+
+async function viewSkill(id) {
+    try {
+        const res = await fetch(`${API_BASE}/${id}`);
+        const result = await res.json();
+        if (result.code !== 200) { showToast(result.message, 'error'); return; }
+        const s = result.data;
+        document.getElementById('modalTitle').textContent = (s.displayName || s.name);
+        document.getElementById('modalMeta').innerHTML =
+            `<span>标识名：<b>${esc(s.name)}</b></span>` +
+            `<span>分类：${categoryTag(s.category)}</span>` +
+            `<span>作者：${esc(s.author || '-')}</span>` +
+            `<span>创建：${esc(s.createdAt || '-')}</span>`;
+        document.getElementById('modalDesc').textContent = s.description || '';
+        document.getElementById('modalContent').textContent = s.content || '（无指令内容）';
+        document.getElementById('detailModal').classList.add('show');
+    } catch (e) {
+        showToast('加载详情失败', 'error');
+    }
+}
+
+function closeModal() {
+    document.getElementById('detailModal').classList.remove('show');
+}
+
+/* ---- Toast ---- */
+
+function showToast(message, type) {
+    const t = document.getElementById('toast');
+    t.textContent = message;
+    t.className = 'toast toast-' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ---- Preset Skills ---- */
+
+const PRESET_SKILLS = [
+    {
+        name: 'code-review',
+        displayName: '代码审查助手',
+        author: '',
+        category: 'code-review',
+        description: 'Review code for quality, security, and maintainability following team standards. Use when reviewing pull requests, examining code changes, or when the user asks for a code review.',
+        content: `# Code Review
+
+## Instructions
+
+When reviewing code:
+
+1. Check for correctness and potential bugs
+2. Verify security best practices (SQL injection, XSS, etc.)
+3. Assess code readability and maintainability
+4. Ensure tests are adequate for the changes
+5. Verify error handling is comprehensive
+
+## Review Checklist
+
+- [ ] Logic is correct and handles edge cases
+- [ ] No security vulnerabilities
+- [ ] Code follows project style conventions
+- [ ] Functions are appropriately sized and focused
+- [ ] Error handling is comprehensive
+- [ ] Tests cover the changes
+
+## Feedback Format
+
+- **Critical**: Must fix before merge
+- **Suggestion**: Consider improving
+- **Nice to have**: Optional enhancement`
+    },
+    {
+        name: 'commit-message-generator',
+        displayName: '提交信息生成器',
+        author: '',
+        category: 'code-review',
+        description: 'Generate descriptive, Conventional Commits formatted commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.',
+        content: `# Commit Message Generator
+
+## Format
+
+Follow the Conventional Commits specification:
+
+\`\`\`
+<type>(<scope>): <short description>
+
+<optional body>
+\`\`\`
+
+## Allowed Types
+
+- feat: A new feature
+- fix: A bug fix
+- docs: Documentation changes
+- refactor: Code refactoring without behavior change
+- style: Formatting, white-space, etc.
+- test: Adding or updating tests
+- chore: Build process, dependencies, CI changes
+- perf: Performance improvements
+
+## Rules
+
+1. Analyze the staged diff thoroughly
+2. Summarize the "why" rather than the "what"
+3. Keep the subject line under 72 characters
+4. Use imperative mood ("add" not "added")
+5. Reference related issue numbers when available`
+    },
+    {
+        name: 'api-doc-generator',
+        displayName: 'API 文档生成器',
+        author: '',
+        category: 'document',
+        description: 'Generate comprehensive API documentation from source code. Analyze route definitions, endpoints, parameters, and response types. Use when working with REST APIs and the user needs OpenAPI specs, Swagger docs, or endpoint documentation.',
+        content: `# API Documentation Generator
+
+## Workflow
+
+1. Scan the codebase for route/endpoint definitions
+2. Extract HTTP method, path, parameters, request body, and response schema
+3. Generate OpenAPI 3.x compatible documentation
+4. Include example request/response payloads
+
+## Output Format
+
+For each endpoint, document:
+
+- **Method & Path**: e.g. \`GET /api/users/{id}\`
+- **Description**: What the endpoint does
+- **Parameters**: Path params, query params, headers
+- **Request Body**: JSON schema with examples
+- **Response**: Status codes, response body schema
+- **Authentication**: Required auth method
+
+## Supported Frameworks
+
+Express, FastAPI, Django REST, Spring Boot, Rails, Gin`
+    },
+    {
+        name: 'unit-test-writer',
+        displayName: '单元测试生成器',
+        author: '',
+        category: 'code-generation',
+        description: 'Generate comprehensive unit tests for functions and classes. Use when the user asks to write tests, improve test coverage, or create test suites for existing code.',
+        content: `# Unit Test Writer
+
+## Principles
+
+1. Follow the AAA pattern: Arrange, Act, Assert
+2. Test both happy paths and edge cases
+3. Use descriptive test names that explain the scenario
+4. Mock external dependencies appropriately
+5. Aim for high coverage without redundant tests
+
+## Test Categories
+
+- **Normal cases**: Expected inputs and outputs
+- **Boundary cases**: Empty inputs, max values, zero
+- **Error cases**: Invalid inputs, exceptions, null values
+- **Integration points**: API calls, database queries (mocked)
+
+## Naming Convention
+
+\`\`\`
+test_<method>_<scenario>_<expected_result>
+\`\`\`
+
+Example: \`test_calculateTotal_withEmptyCart_returnsZero\``
+    },
+    {
+        name: 'code-refactoring',
+        displayName: '代码重构助手',
+        author: '',
+        category: 'code-review',
+        description: 'Analyze code for refactoring opportunities and suggest improvements. Use when the user wants to improve code quality, reduce complexity, extract methods, or apply design patterns.',
+        content: `# Code Refactoring Assistant
+
+## Analysis Steps
+
+1. Identify code smells (long methods, large classes, duplicated code)
+2. Evaluate cyclomatic complexity
+3. Check for SOLID principle violations
+4. Suggest applicable design patterns
+
+## Common Refactorings
+
+- **Extract Method**: Break long functions into focused units
+- **Rename**: Improve variable/function/class naming
+- **Remove Duplication**: DRY principle application
+- **Simplify Conditionals**: Guard clauses, polymorphism
+- **Decompose Class**: Single Responsibility adherence
+
+## Rules
+
+1. Preserve existing behavior (no functional changes)
+2. Refactor in small, reviewable steps
+3. Ensure tests pass after each step
+4. Document the rationale for each refactoring`
+    },
+    {
+        name: 'pr-description-generator',
+        displayName: 'PR 描述生成器',
+        author: '',
+        category: 'document',
+        description: 'Generate professional pull request descriptions from git diff and commit history. Use when the user creates a pull request or needs help writing PR summaries.',
+        content: `# PR Description Generator
+
+## Template
+
+Generate PR descriptions using this structure:
+
+\`\`\`markdown
+## Summary
+<1-3 bullet points describing what changed and why>
+
+## Changes
+- List specific file/module changes
+- Group related changes together
+
+## Why
+<Brief reasoning for the approach taken>
+
+## Testing
+- [ ] Unit tests added/updated
+- [ ] Manual testing performed
+- [ ] Edge cases considered
+
+## Screenshots
+<If UI changes, include before/after>
+\`\`\`
+
+## Rules
+
+1. Analyze ALL commits in the branch, not just the latest
+2. Focus on the "why" over the "what"
+3. Highlight breaking changes prominently
+4. Tag related issues or tickets`
+    },
+    {
+        name: 'sql-optimizer',
+        displayName: 'SQL 查询优化器',
+        author: '',
+        category: 'data-analysis',
+        description: 'Analyze and optimize SQL queries for better performance. Use when the user has slow queries, needs index suggestions, or wants to improve database query efficiency.',
+        content: `# SQL Query Optimizer
+
+## Analysis Checklist
+
+1. Check for missing indexes on WHERE/JOIN columns
+2. Identify N+1 query patterns
+3. Evaluate subquery vs JOIN performance
+4. Check for SELECT * anti-patterns
+5. Analyze EXPLAIN/EXPLAIN ANALYZE output
+
+## Common Optimizations
+
+- Add composite indexes for multi-column WHERE clauses
+- Replace correlated subqueries with JOINs
+- Use EXISTS instead of IN for large datasets
+- Add LIMIT for pagination queries
+- Avoid functions on indexed columns in WHERE
+
+## Output Format
+
+For each optimization:
+1. **Problem**: What is slow and why
+2. **Solution**: The optimized query
+3. **Impact**: Expected performance improvement
+4. **Index suggestion**: CREATE INDEX statement if needed`
+    },
+    {
+        name: 'bug-fix-assistant',
+        displayName: 'Bug 修复助手',
+        author: '',
+        category: 'code-generation',
+        description: 'Systematically diagnose and fix bugs by analyzing error messages, stack traces, and code logic. Use when the user encounters errors, unexpected behavior, or needs debugging assistance.',
+        content: `# Bug Fix Assistant
+
+## Diagnosis Workflow
+
+1. **Reproduce**: Understand the steps to trigger the bug
+2. **Isolate**: Narrow down the root cause location
+3. **Analyze**: Read error messages, stack traces, and logs
+4. **Hypothesize**: Form theories about the root cause
+5. **Fix**: Implement the minimal correct fix
+6. **Verify**: Confirm the fix resolves the issue
+
+## Common Bug Categories
+
+- **NullPointerException / TypeError**: Missing null checks
+- **Off-by-one errors**: Loop boundaries, array indices
+- **Race conditions**: Concurrent access without synchronization
+- **State management**: Stale state, missing updates
+- **API contract violations**: Wrong parameter types or formats
+
+## Rules
+
+1. Fix the root cause, not just the symptoms
+2. Add regression tests for the fixed bug
+3. Check for similar bugs in related code
+4. Document the fix in commit message`
+    }
+];
+
+function togglePresetMenu(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('presetMenu');
+    const isOpen = menu.classList.contains('show');
+
+    if (!menu.innerHTML) {
+        menu.innerHTML = PRESET_SKILLS.map((p, i) => `
+            <div class="preset-item" onclick="applyPreset(${i})">
+                <div class="pi-name">${esc(p.displayName)}</div>
+                <div class="pi-desc">${esc(p.name)} — ${esc(p.description.substring(0, 60))}...</div>
+            </div>
+        `).join('');
+    }
+
+    if (isOpen) {
+        menu.classList.remove('show');
+    } else {
+        menu.classList.add('show');
+    }
+}
+
+function applyPreset(index) {
+    const p = PRESET_SKILLS[index];
+    document.getElementById('editId').value     = '';
+    document.getElementById('name').value        = p.name;
+    document.getElementById('displayName').value = p.displayName;
+    document.getElementById('author').value       = p.author;
+    document.getElementById('category').value     = p.category;
+    document.getElementById('description').value  = p.description;
+    document.getElementById('content').value      = p.content;
+    document.getElementById('formTitle').textContent = '新增 Skill';
+    document.getElementById('btnCancel').style.display = 'none';
+    document.getElementById('presetMenu').classList.remove('show');
+    showToast('已填充「' + p.displayName + '」模板，可编辑后保存', 'success');
+}
+
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('presetMenu');
+    if (menu && !e.target.closest('.preset-wrap')) {
+        menu.classList.remove('show');
+    }
+});
+
+loadSkills();
+</script>
+</body>
+</html>
