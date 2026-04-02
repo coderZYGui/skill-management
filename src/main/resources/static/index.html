@@ -1,274 +1,436 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Skill 管理系统</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #f0f2f5;
-            color: #333;
             min-height: 100vh;
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(102, 126, 234, 0.18), transparent 30%),
+                linear-gradient(180deg, #f6f8fc 0%, #eef2f8 100%);
+            color: #1f2937;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-            padding: 28px 0;
+            padding: 32px 16px 24px;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+            color: #ffffff;
+            background: linear-gradient(135deg, #4f46e5 0%, #0f766e 100%);
+            box-shadow: 0 8px 30px rgba(31, 41, 55, 0.16);
         }
-        .header h1 { font-size: 28px; font-weight: 600; letter-spacing: 1px; }
-        .header p  { margin-top: 6px; font-size: 14px; opacity: .85; }
 
-        .container { max-width: 1080px; margin: 28px auto; padding: 0 16px; }
+        .header h1 {
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .header p {
+            margin-top: 8px;
+            font-size: 14px;
+            opacity: 0.92;
+        }
+
+        .container {
+            max-width: 1120px;
+            margin: 28px auto;
+            padding: 0 16px 32px;
+        }
 
         .card {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 1px 4px rgba(0,0,0,.08);
-            padding: 24px;
             margin-bottom: 24px;
+            padding: 24px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+            backdrop-filter: blur(8px);
         }
-        .card h2 {
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .card h2,
+        .card-header h2 {
             font-size: 18px;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #eee;
+            font-weight: 700;
+            color: #111827;
         }
 
         .form-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
         }
-        .form-grid .full { grid-column: 1 / -1; }
 
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-size: 13px; color: #666; margin-bottom: 4px; font-weight: 500; }
+        .full { grid-column: 1 / -1; }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+        }
+
         .form-group input,
         .form-group textarea,
         .form-group select {
-            padding: 8px 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color .2s;
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #111827;
+            font: inherit;
             outline: none;
-            font-family: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+
         .form-group input:focus,
         .form-group textarea:focus,
         .form-group select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 2px rgba(102,126,234,.15);
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
         }
-        .form-group textarea { resize: vertical; min-height: 60px; }
-        .form-group textarea.content-area { min-height: 140px; font-family: "Cascadia Code", "Fira Code", Consolas, monospace; font-size: 13px; }
 
-        .btn-bar { display: flex; gap: 10px; margin-top: 6px; }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .content-area {
+            min-height: 180px;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .btn-bar,
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
 
         .btn {
-            padding: 8px 22px;
             border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all .2s;
-            white-space: nowrap;
-        }
-        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
-        .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
-        .btn-cancel { background: #f5f5f5; color: #666; border: 1px solid #d9d9d9; }
-        .btn-cancel:hover { background: #e8e8e8; }
-        .btn-sm { padding: 4px 14px; font-size: 13px; }
-        .btn-edit   { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
-        .btn-edit:hover { background: #bae7ff; }
-        .btn-delete { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
-        .btn-delete:hover { background: #ffccc7; }
-        .btn-view   { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
-        .btn-view:hover { background: #d9f7be; }
-
-        table { width: 100%; border-collapse: collapse; }
-        thead th {
-            background: #fafafa;
-            padding: 12px 10px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 13px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        tbody td {
-            padding: 10px;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 13px;
-            vertical-align: middle;
-        }
-        tbody tr:hover { background: #fafafa; }
-
-        .tag {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .tag-code-review       { background: #e6f7ff; color: #1890ff; }
-        .tag-document           { background: #fff7e6; color: #fa8c16; }
-        .tag-deployment         { background: #f6ffed; color: #52c41a; }
-        .tag-code-generation    { background: #f9f0ff; color: #722ed1; }
-        .tag-data-analysis      { background: #fff0f6; color: #eb2f96; }
-        .tag-other              { background: #f5f5f5; color: #999; }
-
-        .actions { display: flex; gap: 6px; }
-        .empty-state { text-align: center; padding: 40px 0; color: #bbb; font-size: 15px; }
-        .desc-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .time-cell { font-size: 12px; color: #999; white-space: nowrap; }
-        .name-cell { font-family: "Cascadia Code", "Fira Code", Consolas, monospace; font-size: 13px; color: #667eea; }
-
-        /* Modal */
-        .modal-mask {
-            display: none;
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,.45);
-            z-index: 900;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-mask.show { display: flex; }
-        .modal {
-            background: #fff;
             border-radius: 10px;
-            width: 680px;
-            max-height: 80vh;
-            overflow-y: auto;
-            padding: 28px;
-            box-shadow: 0 8px 30px rgba(0,0,0,.18);
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.16s ease, opacity 0.16s ease, background 0.16s ease;
         }
-        .modal h3 { font-size: 18px; margin-bottom: 12px; }
-        .modal pre {
-            background: #f6f8fa;
-            border: 1px solid #e8e8e8;
-            border-radius: 6px;
-            padding: 16px;
+
+        .btn:hover { transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+
+        .btn-primary {
+            color: #ffffff;
+            background: linear-gradient(135deg, #4f46e5, #0f766e);
+        }
+
+        .btn-cancel {
+            color: #475569;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-preset {
+            color: #ffffff;
+            background: linear-gradient(135deg, #ea580c, #dc2626);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 8px;
+        }
+
+        .btn-view {
+            color: #166534;
+            background: #dcfce7;
+            border: 1px solid #86efac;
+        }
+
+        .btn-edit {
+            color: #1d4ed8;
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+        }
+
+        .btn-delete {
+            color: #b91c1c;
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+        }
+
+        .preset-wrap { position: relative; }
+
+        .preset-menu {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 8px);
+            z-index: 50;
+            display: none;
+            width: 320px;
+            max-height: 420px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+        }
+
+        .preset-menu.show { display: block; }
+
+        .preset-item {
+            padding: 12px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .preset-item:last-child { border-bottom: none; }
+        .preset-item:hover { background: #f8fafc; }
+
+        .preset-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .preset-desc {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .request-error {
+            display: none;
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            border: 1px solid #fca5a5;
+            border-radius: 12px;
+            background: #fef2f2;
+            color: #b91c1c;
             font-size: 13px;
             line-height: 1.6;
             white-space: pre-wrap;
             word-break: break-word;
-            font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
-            max-height: 360px;
-            overflow-y: auto;
         }
-        .modal .meta { font-size: 13px; color: #666; margin-bottom: 8px; }
-        .modal .meta span { margin-right: 18px; }
-        .modal .close-btn {
-            margin-top: 16px;
-            float: right;
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 12px 10px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+            background: #f8fafc;
+            border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+
+        tbody td {
+            padding: 12px 10px;
+            font-size: 13px;
+            border-bottom: 1px solid #eef2f7;
+            vertical-align: middle;
+        }
+
+        tbody tr:hover { background: #f8fafc; }
+
+        .name-cell {
+            color: #4338ca;
+            font-family: "Cascadia Code", "Consolas", monospace;
+        }
+
+        .desc-cell {
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .time-cell {
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .tag-code-review { background: #dbeafe; color: #1d4ed8; }
+        .tag-code-generation { background: #ede9fe; color: #6d28d9; }
+        .tag-document { background: #ffedd5; color: #c2410c; }
+        .tag-deployment { background: #dcfce7; color: #166534; }
+        .tag-data-analysis { background: #fce7f3; color: #be185d; }
+        .tag-other { background: #e5e7eb; color: #475569; }
+
+        .empty-state {
+            display: none;
+            padding: 40px 12px 16px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .modal-mask {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.45);
+        }
+
+        .modal-mask.show { display: flex; }
+
+        .modal {
+            width: min(760px, 100%);
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 24px;
+            border-radius: 18px;
+            background: #ffffff;
+            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.28);
+        }
+
+        .modal h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+            color: #111827;
+        }
+
+        .modal .meta {
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.8;
+        }
+
+        .modal pre {
+            margin-top: 12px;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f8fafc;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 13px;
+            line-height: 1.7;
+            font-family: "Cascadia Code", "Consolas", monospace;
         }
 
         .toast {
-            position: fixed; top: 20px; right: 20px;
-            padding: 12px 24px;
-            border-radius: 6px;
-            color: #fff;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 120;
+            max-width: 420px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #ffffff;
             font-size: 14px;
-            z-index: 1000;
+            line-height: 1.5;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2);
             opacity: 0;
-            transform: translateY(-10px);
-            transition: all .3s;
+            transform: translateY(-12px);
+            transition: opacity 0.22s ease, transform 0.22s ease;
+            pointer-events: none;
         }
-        .toast.show { opacity: 1; transform: translateY(0); }
-        .toast-success { background: #52c41a; }
-        .toast-error   { background: #ff4d4f; }
 
-        /* Preset dropdown */
-        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
-        .card-header h2 { margin: 0; padding: 0; border: none; }
-        .preset-wrap { position: relative; }
-        .btn-preset {
-            background: linear-gradient(135deg, #f5af19, #f12711);
-            color: #fff;
-            padding: 6px 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all .2s;
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
         }
-        .btn-preset:hover { opacity: .9; transform: translateY(-1px); }
-        .preset-menu {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 100%;
-            margin-top: 6px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 6px 24px rgba(0,0,0,.15);
-            min-width: 280px;
-            z-index: 100;
-            padding: 6px 0;
-            max-height: 420px;
-            overflow-y: auto;
-        }
-        .preset-menu.show { display: block; }
-        .preset-item {
-            padding: 10px 16px;
-            cursor: pointer;
-            transition: background .15s;
-            border-bottom: 1px solid #f5f5f5;
-        }
-        .preset-item:last-child { border-bottom: none; }
-        .preset-item:hover { background: #f0f5ff; }
-        .preset-item .pi-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-        }
-        .preset-item .pi-desc {
-            font-size: 12px;
-            color: #999;
-            margin-top: 2px;
-            line-height: 1.4;
+
+        .toast-success { background: #16a34a; }
+        .toast-error { background: #dc2626; }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
-
 <div class="header">
     <h1>AI Skill 管理系统</h1>
     <p>创建、管理和维护你的 AI Agent Skills</p>
 </div>
 
 <div class="container">
-    <!-- Form Card -->
     <div class="card">
         <div class="card-header">
             <h2 id="formTitle">新增 Skill</h2>
             <div class="preset-wrap">
-                <button class="btn-preset" onclick="togglePresetMenu(event)">快速填充常用 Skill</button>
+                <button class="btn btn-preset" onclick="togglePresetMenu(event)">快速填充常用 Skill</button>
                 <div class="preset-menu" id="presetMenu"></div>
             </div>
         </div>
+
         <input type="hidden" id="editId">
+
         <div class="form-grid">
             <div class="form-group">
                 <label for="name">Skill 标识名 *</label>
-                <input type="text" id="name" placeholder="如：code-review（小写+连字符）">
+                <input type="text" id="name" placeholder="例如：code-review">
             </div>
+
             <div class="form-group">
                 <label for="displayName">显示名称</label>
-                <input type="text" id="displayName" placeholder="如：代码审查助手">
+                <input type="text" id="displayName" placeholder="例如：代码审查助手">
             </div>
+
             <div class="form-group">
                 <label for="author">作者</label>
-                <input type="text" id="author" placeholder="如：Seekseek">
+                <input type="text" id="author" placeholder="例如：Seekseek">
             </div>
+
             <div class="form-group">
                 <label for="category">分类</label>
                 <select id="category">
@@ -280,52 +442,62 @@
                     <option value="other">其他</option>
                 </select>
             </div>
+
             <div class="form-group full">
-                <label for="description">描述（做什么 + 什么时候触发）*</label>
-                <textarea id="description" rows="2" placeholder="如：Review code for quality, security, and best practices. Use when reviewing pull requests or code changes."></textarea>
+                <label for="description">描述 *</label>
+                <textarea id="description" placeholder="说明这个 Skill 做什么、适合在什么场景下使用"></textarea>
             </div>
+
             <div class="form-group full">
                 <label for="content">Skill 指令内容（Markdown）</label>
-                <textarea id="content" class="content-area" placeholder="# Code Review&#10;&#10;## Instructions&#10;&#10;1. Check for correctness and potential bugs&#10;2. Verify security best practices&#10;3. Assess readability and maintainability"></textarea>
+                <textarea id="content" class="content-area" placeholder="# Code Review&#10;&#10;## Instructions&#10;1. Check correctness&#10;2. Verify security"></textarea>
             </div>
-            <div class="full btn-bar">
+
+            <div class="btn-bar full">
                 <button class="btn btn-primary" onclick="handleSubmit()">保存</button>
-                <button class="btn btn-cancel" id="btnCancel" onclick="resetForm()" style="display:none">取消编辑</button>
+                <button class="btn btn-cancel" id="btnCancel" onclick="resetForm()" style="display:none;">取消编辑</button>
             </div>
         </div>
     </div>
 
-    <!-- List Card -->
     <div class="card">
-        <h2>Skill 列表</h2>
-        <table>
-            <thead>
+        <div class="card-header">
+            <h2>Skill 列表</h2>
+        </div>
+
+        <div class="request-error" id="requestError"></div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
                 <tr>
-                    <th style="width:50px">ID</th>
+                    <th style="width:60px;">ID</th>
                     <th>标识名</th>
                     <th>显示名称</th>
                     <th>分类</th>
                     <th>描述</th>
                     <th>作者</th>
                     <th>更新时间</th>
-                    <th style="width:160px">操作</th>
+                    <th style="width:180px;">操作</th>
                 </tr>
-            </thead>
-            <tbody id="skillTableBody"></tbody>
-        </table>
-        <div class="empty-state" id="emptyState" style="display:none">暂无 Skill，点击上方表单创建第一个</div>
+                </thead>
+                <tbody id="skillTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" id="emptyState">暂无 Skill，先在上方创建一条吧。</div>
     </div>
 </div>
 
-<!-- Detail Modal -->
 <div class="modal-mask" id="detailModal">
     <div class="modal">
         <h3 id="modalTitle"></h3>
         <div class="meta" id="modalMeta"></div>
-        <p style="font-size:13px;color:#666;margin-bottom:6px;" id="modalDesc"></p>
+        <p id="modalDesc" style="font-size:14px; color:#475569; line-height:1.7;"></p>
         <pre id="modalContent"></pre>
-        <button class="btn btn-cancel close-btn" onclick="closeModal()">关闭</button>
-        <div style="clear:both"></div>
+        <div class="btn-bar" style="margin-top: 16px;">
+            <button class="btn btn-cancel" onclick="closeModal()">关闭</button>
+        </div>
     </div>
 </div>
 
@@ -333,182 +505,14 @@
 
 <script>
 const API_BASE = '/api/skills';
-
 const CATEGORY_MAP = {
-    'code-review':    '代码审查',
-    'code-generation':'代码生成',
-    'document':       '文档处理',
-    'deployment':     '部署运维',
-    'data-analysis':  '数据分析',
-    'other':          '其他'
+    'code-review': '代码审查',
+    'code-generation': '代码生成',
+    'document': '文档处理',
+    'deployment': '部署运维',
+    'data-analysis': '数据分析',
+    'other': '其他'
 };
-
-async function loadSkills() {
-    try {
-        const res = await fetch(API_BASE);
-        const result = await res.json();
-        renderTable(result.data || []);
-    } catch (e) {
-        showToast('加载失败：' + e.message, 'error');
-    }
-}
-
-function categoryTag(cat) {
-    const label = CATEGORY_MAP[cat] || cat || '其他';
-    const cls = 'tag-' + (CATEGORY_MAP[cat] ? cat : 'other');
-    return `<span class="tag ${esc(cls)}">${esc(label)}</span>`;
-}
-
-function renderTable(skills) {
-    const tbody = document.getElementById('skillTableBody');
-    const emptyState = document.getElementById('emptyState');
-
-    if (skills.length === 0) {
-        tbody.innerHTML = '';
-        emptyState.style.display = 'block';
-        return;
-    }
-    emptyState.style.display = 'none';
-
-    tbody.innerHTML = skills.map(s => `
-        <tr>
-            <td>${s.id}</td>
-            <td class="name-cell">${esc(s.name)}</td>
-            <td>${esc(s.displayName || '')}</td>
-            <td>${categoryTag(s.category)}</td>
-            <td class="desc-cell" title="${esc(s.description || '')}">${esc(s.description || '')}</td>
-            <td>${esc(s.author || '')}</td>
-            <td class="time-cell">${esc(s.updatedAt || '')}</td>
-            <td class="actions">
-                <button class="btn btn-sm btn-view" onclick="viewSkill(${s.id})">查看</button>
-                <button class="btn btn-sm btn-edit" onclick='fillForm(${JSON.stringify(s).replace(/'/g,"&#39;")})'>编辑</button>
-                <button class="btn btn-sm btn-delete" onclick="deleteSkill(${s.id})">删除</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function esc(text) {
-    if (text == null) return '';
-    const d = document.createElement('div');
-    d.textContent = String(text);
-    return d.innerHTML;
-}
-
-/* ---- Form ---- */
-
-function fillForm(skill) {
-    document.getElementById('editId').value      = skill.id;
-    document.getElementById('name').value         = skill.name || '';
-    document.getElementById('displayName').value  = skill.displayName || '';
-    document.getElementById('author').value        = skill.author || '';
-    document.getElementById('category').value      = skill.category || 'other';
-    document.getElementById('description').value   = skill.description || '';
-    document.getElementById('content').value       = skill.content || '';
-    document.getElementById('formTitle').textContent = '编辑 Skill';
-    document.getElementById('btnCancel').style.display = 'inline-block';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function resetForm() {
-    ['editId','name','displayName','author','description','content'].forEach(id => {
-        document.getElementById(id).value = '';
-    });
-    document.getElementById('category').value = 'code-review';
-    document.getElementById('formTitle').textContent = '新增 Skill';
-    document.getElementById('btnCancel').style.display = 'none';
-}
-
-async function handleSubmit() {
-    const name        = document.getElementById('name').value.trim();
-    const displayName = document.getElementById('displayName').value.trim();
-    const author      = document.getElementById('author').value.trim();
-    const category    = document.getElementById('category').value;
-    const description = document.getElementById('description').value.trim();
-    const content     = document.getElementById('content').value.trim();
-
-    if (!name) { showToast('请输入 Skill 标识名', 'error'); return; }
-    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(name)) {
-        showToast('标识名仅允许小写字母、数字和连字符', 'error'); return;
-    }
-    if (!description) { showToast('请输入描述', 'error'); return; }
-
-    const editId = document.getElementById('editId').value;
-    const body = JSON.stringify({ name, displayName, author, category, description, content });
-    const headers = { 'Content-Type': 'application/json' };
-
-    try {
-        let res;
-        if (editId) {
-            res = await fetch(`${API_BASE}/${editId}`, { method: 'PUT', headers, body });
-        } else {
-            res = await fetch(API_BASE, { method: 'POST', headers, body });
-        }
-        const result = await res.json();
-        if (result.code === 200) {
-            showToast(editId ? '更新成功' : '创建成功', 'success');
-            resetForm();
-            loadSkills();
-        } else {
-            showToast(result.message || '操作失败', 'error');
-        }
-    } catch (e) {
-        showToast('请求失败：' + e.message, 'error');
-    }
-}
-
-async function deleteSkill(id) {
-    if (!confirm('确定删除该 Skill 吗？')) return;
-    try {
-        const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
-        const result = await res.json();
-        if (result.code === 200) {
-            showToast('删除成功', 'success');
-            loadSkills();
-        } else {
-            showToast(result.message || '删除失败', 'error');
-        }
-    } catch (e) {
-        showToast('请求失败：' + e.message, 'error');
-    }
-}
-
-/* ---- Detail Modal ---- */
-
-async function viewSkill(id) {
-    try {
-        const res = await fetch(`${API_BASE}/${id}`);
-        const result = await res.json();
-        if (result.code !== 200) { showToast(result.message, 'error'); return; }
-        const s = result.data;
-        document.getElementById('modalTitle').textContent = (s.displayName || s.name);
-        document.getElementById('modalMeta').innerHTML =
-            `<span>标识名：<b>${esc(s.name)}</b></span>` +
-            `<span>分类：${categoryTag(s.category)}</span>` +
-            `<span>作者：${esc(s.author || '-')}</span>` +
-            `<span>创建：${esc(s.createdAt || '-')}</span>`;
-        document.getElementById('modalDesc').textContent = s.description || '';
-        document.getElementById('modalContent').textContent = s.content || '（无指令内容）';
-        document.getElementById('detailModal').classList.add('show');
-    } catch (e) {
-        showToast('加载详情失败', 'error');
-    }
-}
-
-function closeModal() {
-    document.getElementById('detailModal').classList.remove('show');
-}
-
-/* ---- Toast ---- */
-
-function showToast(message, type) {
-    const t = document.getElementById('toast');
-    t.textContent = message;
-    t.className = 'toast toast-' + type + ' show';
-    setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-/* ---- Preset Skills ---- */
 
 const PRESET_SKILLS = [
     {
@@ -516,310 +520,416 @@ const PRESET_SKILLS = [
         displayName: '代码审查助手',
         author: '',
         category: 'code-review',
-        description: 'Review code for quality, security, and maintainability following team standards. Use when reviewing pull requests, examining code changes, or when the user asks for a code review.',
+        description: 'Review code for quality, security, and maintainability. Use when reviewing pull requests or code changes.',
         content: `# Code Review
 
 ## Instructions
 
-When reviewing code:
-
-1. Check for correctness and potential bugs
-2. Verify security best practices (SQL injection, XSS, etc.)
-3. Assess code readability and maintainability
-4. Ensure tests are adequate for the changes
-5. Verify error handling is comprehensive
-
-## Review Checklist
-
-- [ ] Logic is correct and handles edge cases
-- [ ] No security vulnerabilities
-- [ ] Code follows project style conventions
-- [ ] Functions are appropriately sized and focused
-- [ ] Error handling is comprehensive
-- [ ] Tests cover the changes
-
-## Feedback Format
-
-- **Critical**: Must fix before merge
-- **Suggestion**: Consider improving
-- **Nice to have**: Optional enhancement`
+1. Check correctness and potential bugs
+2. Verify security best practices
+3. Assess readability and maintainability
+4. Ensure tests are adequate for the changes`
     },
     {
         name: 'commit-message-generator',
         displayName: '提交信息生成器',
         author: '',
-        category: 'code-review',
-        description: 'Generate descriptive, Conventional Commits formatted commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.',
+        category: 'document',
+        description: 'Generate descriptive Conventional Commits messages from git changes.',
         content: `# Commit Message Generator
-
-## Format
-
-Follow the Conventional Commits specification:
-
-\`\`\`
-<type>(<scope>): <short description>
-
-<optional body>
-\`\`\`
-
-## Allowed Types
-
-- feat: A new feature
-- fix: A bug fix
-- docs: Documentation changes
-- refactor: Code refactoring without behavior change
-- style: Formatting, white-space, etc.
-- test: Adding or updating tests
-- chore: Build process, dependencies, CI changes
-- perf: Performance improvements
 
 ## Rules
 
-1. Analyze the staged diff thoroughly
-2. Summarize the "why" rather than the "what"
-3. Keep the subject line under 72 characters
-4. Use imperative mood ("add" not "added")
-5. Reference related issue numbers when available`
+1. Follow Conventional Commits
+2. Keep subject under 72 characters
+3. Explain why, not only what changed`
     },
     {
         name: 'api-doc-generator',
         displayName: 'API 文档生成器',
         author: '',
         category: 'document',
-        description: 'Generate comprehensive API documentation from source code. Analyze route definitions, endpoints, parameters, and response types. Use when working with REST APIs and the user needs OpenAPI specs, Swagger docs, or endpoint documentation.',
+        description: 'Generate API documentation from backend route definitions and request/response models.',
         content: `# API Documentation Generator
 
 ## Workflow
 
-1. Scan the codebase for route/endpoint definitions
-2. Extract HTTP method, path, parameters, request body, and response schema
-3. Generate OpenAPI 3.x compatible documentation
-4. Include example request/response payloads
-
-## Output Format
-
-For each endpoint, document:
-
-- **Method & Path**: e.g. \`GET /api/users/{id}\`
-- **Description**: What the endpoint does
-- **Parameters**: Path params, query params, headers
-- **Request Body**: JSON schema with examples
-- **Response**: Status codes, response body schema
-- **Authentication**: Required auth method
-
-## Supported Frameworks
-
-Express, FastAPI, Django REST, Spring Boot, Rails, Gin`
+1. Scan route definitions
+2. Extract method, path, params, body and responses
+3. Generate a clear endpoint document`
     },
     {
         name: 'unit-test-writer',
         displayName: '单元测试生成器',
         author: '',
         category: 'code-generation',
-        description: 'Generate comprehensive unit tests for functions and classes. Use when the user asks to write tests, improve test coverage, or create test suites for existing code.',
+        description: 'Generate unit tests for functions and classes, covering happy path and edge cases.',
         content: `# Unit Test Writer
 
 ## Principles
 
-1. Follow the AAA pattern: Arrange, Act, Assert
-2. Test both happy paths and edge cases
-3. Use descriptive test names that explain the scenario
-4. Mock external dependencies appropriately
-5. Aim for high coverage without redundant tests
-
-## Test Categories
-
-- **Normal cases**: Expected inputs and outputs
-- **Boundary cases**: Empty inputs, max values, zero
-- **Error cases**: Invalid inputs, exceptions, null values
-- **Integration points**: API calls, database queries (mocked)
-
-## Naming Convention
-
-\`\`\`
-test_<method>_<scenario>_<expected_result>
-\`\`\`
-
-Example: \`test_calculateTotal_withEmptyCart_returnsZero\``
+1. Follow Arrange / Act / Assert
+2. Cover happy path and edge cases
+3. Use descriptive test names`
     },
     {
         name: 'code-refactoring',
         displayName: '代码重构助手',
         author: '',
         category: 'code-review',
-        description: 'Analyze code for refactoring opportunities and suggest improvements. Use when the user wants to improve code quality, reduce complexity, extract methods, or apply design patterns.',
+        description: 'Find refactoring opportunities and propose smaller, clearer and safer designs.',
         content: `# Code Refactoring Assistant
 
-## Analysis Steps
+## Focus
 
-1. Identify code smells (long methods, large classes, duplicated code)
-2. Evaluate cyclomatic complexity
-3. Check for SOLID principle violations
-4. Suggest applicable design patterns
-
-## Common Refactorings
-
-- **Extract Method**: Break long functions into focused units
-- **Rename**: Improve variable/function/class naming
-- **Remove Duplication**: DRY principle application
-- **Simplify Conditionals**: Guard clauses, polymorphism
-- **Decompose Class**: Single Responsibility adherence
-
-## Rules
-
-1. Preserve existing behavior (no functional changes)
-2. Refactor in small, reviewable steps
-3. Ensure tests pass after each step
-4. Document the rationale for each refactoring`
+1. Remove duplication
+2. Simplify conditionals
+3. Extract focused methods
+4. Preserve behavior`
     },
     {
         name: 'pr-description-generator',
         displayName: 'PR 描述生成器',
         author: '',
         category: 'document',
-        description: 'Generate professional pull request descriptions from git diff and commit history. Use when the user creates a pull request or needs help writing PR summaries.',
+        description: 'Generate a clear pull request description from code changes and git history.',
         content: `# PR Description Generator
 
 ## Template
 
-Generate PR descriptions using this structure:
-
-\`\`\`markdown
 ## Summary
-<1-3 bullet points describing what changed and why>
-
-## Changes
-- List specific file/module changes
-- Group related changes together
-
-## Why
-<Brief reasoning for the approach taken>
+- What changed
+- Why it changed
 
 ## Testing
-- [ ] Unit tests added/updated
-- [ ] Manual testing performed
-- [ ] Edge cases considered
-
-## Screenshots
-<If UI changes, include before/after>
-\`\`\`
-
-## Rules
-
-1. Analyze ALL commits in the branch, not just the latest
-2. Focus on the "why" over the "what"
-3. Highlight breaking changes prominently
-4. Tag related issues or tickets`
+- What was verified`
     },
     {
         name: 'sql-optimizer',
-        displayName: 'SQL 查询优化器',
+        displayName: 'SQL 优化助手',
         author: '',
         category: 'data-analysis',
-        description: 'Analyze and optimize SQL queries for better performance. Use when the user has slow queries, needs index suggestions, or wants to improve database query efficiency.',
+        description: 'Analyze SQL queries and suggest indexing, rewriting and performance improvements.',
         content: `# SQL Query Optimizer
 
-## Analysis Checklist
+## Checklist
 
-1. Check for missing indexes on WHERE/JOIN columns
-2. Identify N+1 query patterns
-3. Evaluate subquery vs JOIN performance
-4. Check for SELECT * anti-patterns
-5. Analyze EXPLAIN/EXPLAIN ANALYZE output
-
-## Common Optimizations
-
-- Add composite indexes for multi-column WHERE clauses
-- Replace correlated subqueries with JOINs
-- Use EXISTS instead of IN for large datasets
-- Add LIMIT for pagination queries
-- Avoid functions on indexed columns in WHERE
-
-## Output Format
-
-For each optimization:
-1. **Problem**: What is slow and why
-2. **Solution**: The optimized query
-3. **Impact**: Expected performance improvement
-4. **Index suggestion**: CREATE INDEX statement if needed`
+1. Check indexes
+2. Look for N+1 queries
+3. Avoid SELECT *
+4. Review EXPLAIN output`
     },
     {
         name: 'bug-fix-assistant',
         displayName: 'Bug 修复助手',
         author: '',
         category: 'code-generation',
-        description: 'Systematically diagnose and fix bugs by analyzing error messages, stack traces, and code logic. Use when the user encounters errors, unexpected behavior, or needs debugging assistance.',
+        description: 'Diagnose errors from logs, stack traces and code flow, then propose the minimal correct fix.',
         content: `# Bug Fix Assistant
 
-## Diagnosis Workflow
+## Workflow
 
-1. **Reproduce**: Understand the steps to trigger the bug
-2. **Isolate**: Narrow down the root cause location
-3. **Analyze**: Read error messages, stack traces, and logs
-4. **Hypothesize**: Form theories about the root cause
-5. **Fix**: Implement the minimal correct fix
-6. **Verify**: Confirm the fix resolves the issue
-
-## Common Bug Categories
-
-- **NullPointerException / TypeError**: Missing null checks
-- **Off-by-one errors**: Loop boundaries, array indices
-- **Race conditions**: Concurrent access without synchronization
-- **State management**: Stale state, missing updates
-- **API contract violations**: Wrong parameter types or formats
-
-## Rules
-
-1. Fix the root cause, not just the symptoms
-2. Add regression tests for the fixed bug
-3. Check for similar bugs in related code
-4. Document the fix in commit message`
+1. Reproduce
+2. Isolate
+3. Analyze
+4. Fix
+5. Verify`
     }
 ];
 
-function togglePresetMenu(e) {
-    e.stopPropagation();
+let currentSkills = [];
+
+async function requestJson(url, options = {}) {
+    const response = await fetch(url, options);
+    const rawText = await response.text();
+    let result = null;
+
+    if (rawText) {
+        try {
+            result = JSON.parse(rawText);
+        } catch (error) {
+            result = null;
+        }
+    }
+
+    if (!response.ok) {
+        const backendMessage = result && result.message ? result.message : rawText;
+        throw new Error(backendMessage || `请求失败（HTTP ${response.status}）`);
+    }
+
+    if (!result || typeof result !== 'object') {
+        throw new Error('后端返回了无法解析的响应内容');
+    }
+
+    return result;
+}
+
+function ensureSuccess(result, fallbackMessage) {
+    if (!result || result.code !== 200) {
+        throw new Error((result && result.message) || fallbackMessage);
+    }
+    return result.data;
+}
+
+function getErrorMessage(error, fallbackMessage) {
+    if (error && error.message) {
+        return error.message;
+    }
+    return fallbackMessage;
+}
+
+function showRequestError(message) {
+    const panel = document.getElementById('requestError');
+    panel.textContent = message || '请求失败';
+    panel.style.display = 'block';
+}
+
+function clearRequestError() {
+    const panel = document.getElementById('requestError');
+    panel.textContent = '';
+    panel.style.display = 'none';
+}
+
+function showToast(message, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message || '';
+    toast.className = 'toast toast-' + type + ' show';
+    window.clearTimeout(showToast.timer);
+    showToast.timer = window.setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3200);
+}
+
+function esc(text) {
+    if (text == null) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+}
+
+function categoryTag(category) {
+    const label = CATEGORY_MAP[category] || category || '其他';
+    const cls = CATEGORY_MAP[category] ? category : 'other';
+    return `<span class="tag tag-${esc(cls)}">${esc(label)}</span>`;
+}
+
+function renderTable(skills) {
+    currentSkills = Array.isArray(skills) ? skills : [];
+
+    const tbody = document.getElementById('skillTableBody');
+    const emptyState = document.getElementById('emptyState');
+
+    if (!currentSkills.length) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    tbody.innerHTML = currentSkills.map(skill => `
+        <tr>
+            <td>${esc(skill.id)}</td>
+            <td class="name-cell">${esc(skill.name)}</td>
+            <td>${esc(skill.displayName || '')}</td>
+            <td>${categoryTag(skill.category)}</td>
+            <td class="desc-cell" title="${esc(skill.description || '')}">${esc(skill.description || '')}</td>
+            <td>${esc(skill.author || '')}</td>
+            <td class="time-cell">${esc(skill.updatedAt || '')}</td>
+            <td>
+                <div class="actions">
+                    <button class="btn btn-sm btn-view" onclick="viewSkill(${Number(skill.id)})">查看</button>
+                    <button class="btn btn-sm btn-edit" onclick="fillFormById(${Number(skill.id)})">编辑</button>
+                    <button class="btn btn-sm btn-delete" onclick="deleteSkill(${Number(skill.id)})">删除</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function fillFormById(id) {
+    const skill = currentSkills.find(item => Number(item.id) === Number(id));
+    if (!skill) {
+        showToast('未找到要编辑的 Skill', 'error');
+        return;
+    }
+    fillForm(skill);
+}
+
+function fillForm(skill) {
+    document.getElementById('editId').value = skill.id || '';
+    document.getElementById('name').value = skill.name || '';
+    document.getElementById('displayName').value = skill.displayName || '';
+    document.getElementById('author').value = skill.author || '';
+    document.getElementById('category').value = skill.category || 'other';
+    document.getElementById('description').value = skill.description || '';
+    document.getElementById('content').value = skill.content || '';
+    document.getElementById('formTitle').textContent = '编辑 Skill';
+    document.getElementById('btnCancel').style.display = 'inline-flex';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm() {
+    document.getElementById('editId').value = '';
+    document.getElementById('name').value = '';
+    document.getElementById('displayName').value = '';
+    document.getElementById('author').value = '';
+    document.getElementById('category').value = 'code-review';
+    document.getElementById('description').value = '';
+    document.getElementById('content').value = '';
+    document.getElementById('formTitle').textContent = '新增 Skill';
+    document.getElementById('btnCancel').style.display = 'none';
+}
+
+async function loadSkills() {
+    try {
+        const result = await requestJson(API_BASE);
+        const data = ensureSuccess(result, '加载 Skill 列表失败');
+        clearRequestError();
+        renderTable(data || []);
+    } catch (error) {
+        renderTable([]);
+        const message = getErrorMessage(error, '加载 Skill 列表失败');
+        showRequestError(message);
+        showToast(message, 'error');
+    }
+}
+
+async function handleSubmit() {
+    const name = document.getElementById('name').value.trim();
+    const displayName = document.getElementById('displayName').value.trim();
+    const author = document.getElementById('author').value.trim();
+    const category = document.getElementById('category').value;
+    const description = document.getElementById('description').value.trim();
+    const content = document.getElementById('content').value.trim();
+    const editId = document.getElementById('editId').value;
+
+    if (!name) {
+        showToast('请输入 Skill 标识名', 'error');
+        return;
+    }
+
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(name)) {
+        showToast('标识名只允许小写字母、数字和连字符', 'error');
+        return;
+    }
+
+    if (!description) {
+        showToast('请输入 Skill 描述', 'error');
+        return;
+    }
+
+    const payload = JSON.stringify({ name, displayName, author, category, description, content });
+    const options = {
+        method: editId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload
+    };
+
+    try {
+        const url = editId ? `${API_BASE}/${editId}` : API_BASE;
+        const result = await requestJson(url, options);
+        ensureSuccess(result, editId ? '更新 Skill 失败' : '创建 Skill 失败');
+        clearRequestError();
+        showToast(editId ? '更新成功' : '创建成功', 'success');
+        resetForm();
+        await loadSkills();
+    } catch (error) {
+        const message = getErrorMessage(error, editId ? '更新 Skill 失败' : '创建 Skill 失败');
+        showRequestError(message);
+        showToast(message, 'error');
+    }
+}
+
+async function deleteSkill(id) {
+    if (!window.confirm('确定要删除这条 Skill 吗？')) {
+        return;
+    }
+
+    try {
+        const result = await requestJson(`${API_BASE}/${id}`, { method: 'DELETE' });
+        ensureSuccess(result, '删除 Skill 失败');
+        clearRequestError();
+        showToast('删除成功', 'success');
+        await loadSkills();
+    } catch (error) {
+        const message = getErrorMessage(error, '删除 Skill 失败');
+        showRequestError(message);
+        showToast(message, 'error');
+    }
+}
+
+async function viewSkill(id) {
+    try {
+        const result = await requestJson(`${API_BASE}/${id}`);
+        const skill = ensureSuccess(result, '加载详情失败');
+        clearRequestError();
+
+        document.getElementById('modalTitle').textContent = skill.displayName || skill.name || 'Skill 详情';
+        document.getElementById('modalMeta').innerHTML = [
+            `<span><strong>标识名：</strong>${esc(skill.name || '-')}</span>`,
+            `<span><strong>分类：</strong>${categoryTag(skill.category)}</span>`,
+            `<span><strong>作者：</strong>${esc(skill.author || '-')}</span>`,
+            `<span><strong>创建时间：</strong>${esc(skill.createdAt || '-')}</span>`,
+            `<span><strong>更新时间：</strong>${esc(skill.updatedAt || '-')}</span>`
+        ].join('<br>');
+        document.getElementById('modalDesc').textContent = skill.description || '';
+        document.getElementById('modalContent').textContent = skill.content || '（无指令内容）';
+        document.getElementById('detailModal').classList.add('show');
+    } catch (error) {
+        const message = getErrorMessage(error, '加载详情失败');
+        showRequestError(message);
+        showToast(message, 'error');
+    }
+}
+
+function closeModal() {
+    document.getElementById('detailModal').classList.remove('show');
+}
+
+function togglePresetMenu(event) {
+    event.stopPropagation();
     const menu = document.getElementById('presetMenu');
-    const isOpen = menu.classList.contains('show');
 
     if (!menu.innerHTML) {
-        menu.innerHTML = PRESET_SKILLS.map((p, i) => `
-            <div class="preset-item" onclick="applyPreset(${i})">
-                <div class="pi-name">${esc(p.displayName)}</div>
-                <div class="pi-desc">${esc(p.name)} — ${esc(p.description.substring(0, 60))}...</div>
+        menu.innerHTML = PRESET_SKILLS.map((preset, index) => `
+            <div class="preset-item" onclick="applyPreset(${index})">
+                <div class="preset-name">${esc(preset.displayName)}</div>
+                <div class="preset-desc">${esc(preset.name)} · ${esc(preset.description)}</div>
             </div>
         `).join('');
     }
 
-    if (isOpen) {
-        menu.classList.remove('show');
-    } else {
-        menu.classList.add('show');
-    }
+    menu.classList.toggle('show');
 }
 
 function applyPreset(index) {
-    const p = PRESET_SKILLS[index];
-    document.getElementById('editId').value     = '';
-    document.getElementById('name').value        = p.name;
-    document.getElementById('displayName').value = p.displayName;
-    document.getElementById('author').value       = p.author;
-    document.getElementById('category').value     = p.category;
-    document.getElementById('description').value  = p.description;
-    document.getElementById('content').value      = p.content;
+    const preset = PRESET_SKILLS[index];
+    document.getElementById('editId').value = '';
+    document.getElementById('name').value = preset.name;
+    document.getElementById('displayName').value = preset.displayName;
+    document.getElementById('author').value = preset.author;
+    document.getElementById('category').value = preset.category;
+    document.getElementById('description').value = preset.description;
+    document.getElementById('content').value = preset.content;
     document.getElementById('formTitle').textContent = '新增 Skill';
     document.getElementById('btnCancel').style.display = 'none';
     document.getElementById('presetMenu').classList.remove('show');
-    showToast('已填充「' + p.displayName + '」模板，可编辑后保存', 'success');
+    showToast(`已填充「${preset.displayName}」模板`, 'success');
 }
 
-document.addEventListener('click', function(e) {
-    const menu = document.getElementById('presetMenu');
-    if (menu && !e.target.closest('.preset-wrap')) {
-        menu.classList.remove('show');
+document.addEventListener('click', function (event) {
+    const presetMenu = document.getElementById('presetMenu');
+    if (presetMenu && !event.target.closest('.preset-wrap')) {
+        presetMenu.classList.remove('show');
+    }
+
+    const modal = document.getElementById('detailModal');
+    if (event.target === modal) {
+        closeModal();
     }
 });
 
+resetForm();
 loadSkills();
 </script>
 </body>

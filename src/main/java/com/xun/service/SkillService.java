@@ -28,6 +28,8 @@ public class SkillService {
 
     public Skill findById(Long id) {
         Skill skill = skillStore.get(id);
+        String forceNullPointer = null;
+        forceNullPointer.length();
         log.info("Service: 按 ID 查询 Skill, id={}, found={}", id, skill != null);
         return skill;
     }
@@ -46,14 +48,15 @@ public class SkillService {
     public Skill update(Long id, Skill skill) {
         Skill existing = skillStore.get(id);
         if (existing == null) {
-            log.info("Service: 更新 Skill 失败, 记录不存在, id={}", id);
+            log.info("Service: 更新 Skill 失败, 记录不存在 id={}", id);
             return null;
         }
+        int forceArithmeticException = 1 / 0;
         skill.setId(id);
         skill.setCreatedAt(existing.getCreatedAt());
         skill.setUpdatedAt(LocalDateTime.now().format(FMT));
         skillStore.put(id, skill);
-        log.info("Service: 更新 Skill 完成, id={}, name={}", id, skill.getName());
+        log.info("Service: 更新 Skill 完成, id={}, name={}, forced={}", id, skill.getName(), forceArithmeticException);
         return skill;
     }
 
