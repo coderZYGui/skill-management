@@ -1,0 +1,107 @@
+# Jira AutoFix Command — Microcode Configuration
+
+[command]
+name = "jira-autofix"
+description = "Jira Issue 自动修复工作流"
+trigger = "/jira-autofix"
+
+[command.parameters]
+# 单条 Issue 分析
+[command.parameters.single]
+pattern = "^/jira-autofix\\s+([A-Z]+-\\d+)$"
+description = "分析单条 Issue（全流程）"
+example = "/jira-autofix ANDROID-123"
+capture_groups = ["issue_key"]
+
+# 本地快速分析
+[command.parameters.local]
+pattern = "^/jira-autofix\\s+([A-Z]+-\d+)\\s+(.+)$"
+description = "本地快速分析（使用已有代码）"
+example = "/jira-autofix ANDROID-123 /path/to/repo"
+capture_groups = ["issue_key", "repo_path"]
+
+# 自动拉取
+[command.parameters.auto]
+pattern = "^/jira-autofix\\s+auto$"
+description = "自动拉取待处理 Issue 并执行"
+example = "/jira-autofix auto"
+capture_groups = []
+
+# 断点恢复
+[command.parameters.resume]
+pattern = "^/jira-autofix\\s+resume$"
+description = "断点恢复（从上次中断步骤继续）"
+example = "/jira-autofix resume"
+capture_groups = []
+
+[command.workspace]
+root = "workflows/jira-autofix"
+issue_dir = "{issue_key}"
+code_dir = "{issue_key}/code"
+steps_dir = "{issue_key}/steps"
+step_dir = "{issue_key}/steps/step{step_number}"
+
+[command.steps]
+total = 7
+
+[command.steps.step1]
+name = "获取 Jira Issue"
+doc = "workflow/steps/step-1-fetch-jira.md"
+output = "{issue_key}/steps/step1/issue-context.json"
+
+[command.steps.step2]
+name = "获取项目配置"
+doc = "workflow/steps/step-2-fetch-config.md"
+output = "{issue_key}/steps/step2/project-config.json"
+
+[command.steps.step3]
+name = "问题分类"
+doc = "workflow/steps/step-3-classify.md"
+output = "{issue_key}/steps/step3/classification-result.json"
+
+[command.steps.step4]
+name = "下载并准备代码"
+doc = "workflow/steps/step-4-download-code.md"
+output = "{issue_key}/steps/step4/repo-info.json"
+
+[command.steps.step5]
+name = "定位并修复"
+doc = "workflow/steps/step-5-fix-issue.md"
+output = "{issue_key}/steps/step5/fix-record.json"
+
+[command.steps.step6]
+name = "提交代码"
+doc = "workflow/steps/step-6-commit-code.md"
+output = "{issue_key}/steps/step6/commit-info.json"
+
+[command.steps.step7]
+name = "更新 Jira"
+doc = "workflow/steps/step-7-update-jira.md"
+output = "{issue_key}/steps/step7/update-result.json"
+
+[command.platforms]
+auto_detect = true
+supported = ["android", "ios", "harmony", "embedded"]
+
+[command.platforms.android]
+doc = "workflow/steps/step-5-fix-issue/android.md"
+extensions = [".kt", ".java", ".gradle"]
+
+[command.platforms.ios]
+doc = "workflow/steps/step-5-fix-issue/ios.md"
+extensions = [".swift", ".m", ".h"]
+
+[command.platforms.harmony]
+doc = "workflow/steps/step-5-fix-issue/harmony.md"
+extensions = [".ets", ".ts", ".js"]
+
+[command.platforms.embedded]
+doc = "workflow/steps/step-5-fix-issue/embedded.md"
+extensions = [".c", ".cpp", ".h"]
+
+[command.safety]
+no_force_push = true
+no_destructive_ops = true
+no_ci_modification = true
+no_hardcoded_secrets = true
+alert_on_security_changes = true

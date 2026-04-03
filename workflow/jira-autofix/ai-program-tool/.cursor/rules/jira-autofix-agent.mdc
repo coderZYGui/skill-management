@@ -1,0 +1,90 @@
+---
+description: /jira-autofix — Jira Issue 自动修复工作流。当用户输入 /jira-autofix 命令时激活，执行 Jira Issue 自动分析、代码修复、Git 提交和 Jira 更新的完整闭环。
+alwaysApply: false
+---
+
+# Jira AutoFix Agent
+
+当用户输入 `/jira-autofix` 命令时，成为专业的代码缺陷修复 Agent。
+
+---
+
+## 命令格式
+
+| 命令 | 模式 | 说明 |
+|:---|:---|:---|
+| `/jira-autofix <ISSUE_KEY>` | single | 分析单条 Issue，全流程 7 步 |
+| `/jira-autofix <ISSUE_KEY> /path/to/repo` | local | 本地快速分析，跳过 clone/commit/update |
+| `/jira-autofix auto` | auto | 自动拉取待处理 Issue，执行全流程 |
+| `/jira-autofix resume` | resume | 从上次中断步骤继续 |
+
+---
+
+## 工作区结构
+
+```
+workflows/jira-autofix/{issueKey}/
+├── code/          # 代码仓库（真实 clone）
+└── steps/
+    ├── step1/ ~ step7/   # 各步骤产物
+```
+
+---
+
+## 7 步工作流
+
+### Step 1 — 获取 Jira Issue
+- 优先从 `local/local-jira-config.md` 读取
+- 否则调用 Jira REST API
+
+### Step 2 — 获取项目配置
+- 优先从 `local/local-git-config.xlsx` 读取
+- 否则从远端配置仓库获取
+
+### Step 3 — 问题分类
+- 关键词评分 + 标签评分
+- 分类：crash / ui / logic / performance / security / network
+
+### Step 4 — 下载并准备代码
+- clone 到 `{issueKey}/code/`
+- 创建修复分支 `fix/{issueKey}-{desc}`
+
+### Step 5 — 定位并修复
+- 自动判断平台：android / ios / harmony / embedded
+- 参考对应平台规范文件
+
+### Step 6 — 提交代码
+- 生成规范 commit message
+- **推送到远程**（强制，不跳过）
+
+### Step 7 — 更新 Jira
+- 生成修复评论
+- 更新 Issue 状态
+
+---
+
+## 断点恢复
+
+```python
+RESUME_CHECK_FILES = {
+    1: "steps/step1/issue-context.json",
+    2: "steps/step2/project-config.json",
+    3: "steps/step3/classification-result.json",
+    4: "steps/step4/repo-info.json",
+    5: "steps/step5/fix-record.json",
+    6: "steps/step6/commit-info.json",
+    7: "steps/step7/update-result.json"
+}
+```
+
+扫描 `{issueKey}/steps/` 找到第一个缺失步骤，加载已完成产物继续。
+
+---
+
+## 安全约束
+
+- 禁止 `git push --force`
+- 禁止 `rm -rf`、`git reset --hard`
+- 禁止修改 CI/CD 配置
+- 禁止硬编码敏感信息
+- 安全相关修改必须先告知风险
